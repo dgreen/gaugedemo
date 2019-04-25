@@ -20,6 +20,9 @@ package dgreen.gaugedemo;
 
 import eu.hansolo.medusa.Gauge;
 import eu.hansolo.medusa.GaugeBuilder;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.layout.Background;
@@ -45,58 +48,26 @@ public class GaugeDemo extends Application {
     private        TextArea       notesArea;
     private        Label          notesLabel;
     private        VBox           notesBox;
+    
+    private static Properties     properties;
 
     private static final int PREF_SIZE = 300;
     
     @Override public void init() {
         
-        g1 = buildGaugeProperties("g1")
-                               .title("Cash and Pledge Contributions")
-                               .value(1500.)
-                               .minValue(0.)
-                               .threshold(3941.)
-                               .maxValue(3941.*1.5)
-                               .build();
+        g1 = buildGaugeProperties("g1").build();
         
-        g2 = buildGaugeProperties("g2")
-                               .title("Program Support vs Budget")
-                               .value(3000.)
-                               .minValue(0.)
-                               .threshold(6000.)
-                               .maxValue(6000.*1.5)
-                               .build();
+        g2 = buildGaugeProperties("g2").build();
 
-        g3 = buildGaugeProperties("g3")
-                               .title("Admin & Fundraising vs Budget")
-                               .value(700.0)
-                               .minValue(0.)
-                               .threshold(2607.)
-                               .maxValue(2607.*1.5)
-                               .build();
+        g3 = buildGaugeProperties("g3").build();
 
-        g4 = buildGaugeProperties("g4")
-                               .title("Days Expended")
-                               .value(85.)
-                               .maxValue(365.*1.5)
-                               .threshold(365)
-                               .minValue(0.)
-                               .build();
+        g4 = buildGaugeProperties("g4").build();
 
         g5 = buildGaugeProperties("g5")
-                               .title("Net Investment Income")
-                               .value(700.)
-                               .minValue(-2778.*.5)
-                               .threshold(2778.)
-                               .maxValue(2778.*1.5)
                                .angleRange(120.)   // NOTE smaller range to distinguish
                                .build();
                 
         g6 = buildGaugeProperties("g6")
-                               .title("Program to Total Expense Ratio")
-                               .value(84.0)
-                               .minValue(0.)
-                               .threshold(75.)
-                               .maxValue(100.)
                                .barColor(Color.RED)         // note colors
                                .thresholdColor(Color.GREEN)
                                .angleRange(120.)            // note angle ragne
@@ -156,11 +127,11 @@ public class GaugeDemo extends Application {
                 .valueColor(Color.DARKBLUE)
                 .needleColor(Color.BLACK)
                 .thresholdVisible(true)
-//                .title("Program to Total Expense Ratio") -- fetch properties
-//                .value(84.0)
-//                .minValue(0.)
-//                .threshold(75.)
-//                .maxValue(100.)
+                .title(properties.getProperty(name + "." + "title", "title missing"))
+                .value(Double.valueOf(properties.getProperty(name + "." + "value", "0")))
+                .minValue(Double.valueOf(properties.getProperty(name + "." + "minValue", "0")))
+                .threshold(Double.valueOf(properties.getProperty(name + "." + "threshold", "0")))
+                .maxValue(Double.valueOf(properties.getProperty(name + "." + "maxValue", "0")))
                ;
     }
 
@@ -170,7 +141,24 @@ public class GaugeDemo extends Application {
 
 
     public static void main(String[] args) {
-        // load params
+        loadParams();
         launch(args);
+    }
+    
+    public static void loadParams() {
+        try (InputStream input = GaugeDemo.class.getClassLoader().getResourceAsStream("config.properties")) {
+            properties = new Properties();
+            
+            if (input == null) {
+                System.err.println("Unable to find config.properties");
+                return;
+            }
+            
+            // load the properties file
+            properties.load(input);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
